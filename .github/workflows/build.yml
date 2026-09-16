@@ -1,0 +1,68 @@
+# GitHub Actions：macOS 云端构建未签名 IPA（Windows 用户无需 Mac）
+# 触发方式：① push 到 main 自动构建 ② 手动在 Actions 页面点 Run workflow
+# 产物：Artifacts 里的 AIReplyShell-unsigned-ipa.zip（解压得 .ipa）
+
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:        # 手动触发按钮
+  push:
+    branches: [main]
+    paths:
+      - "**/*.swift"
+      - "project.yml"
+      - ".github/workflows/build.yml"
+
+jobs:
+  build:
+    runs-on: macos-14       # GitHub 免费提供的 macOS 云机器（公开仓库免费无限时）
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 选择 Xcode 15.4（支持 iOS 16+ SDK）
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
+      - name: 安装 XcodeGen（生成 .xcodeproj）
+        run: brew install xcodegen
+
+      - name: 生成 Xcode 工程
+        run: xcodegen generate
+
+      - name: 归档构建（未签名）
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project AIReplyShell.xcodeproj \
+            -scheme AIReplyShell \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/AIReplyShell.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            | tee build.log | grep -E "(error|warning:|BUILD|ARCHIVE)" || true
+          # 确保失败时任务变红
+          test -d build/AIReplyShell.xcarchive
+
+      - name: 打包未签名 IPA
+        run: |
+          mkdir -p build/Payload
+          cp -R "build/AIReplyShell.xcarchive/Products/Applications/AIReplyShell.app" build/Payload/
+          cd build
+          zip -qry AIReplyShell-unsigned.ipa Payload
+          ls -lh AIReplyShell-unsigned.ipa
+
+      - name: 保存构建日志（失败排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+
+      - name: 上传 IPA 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIReplyShell-unsigned-ipa
+          path: build/AIReplyShell-unsigned.ipa

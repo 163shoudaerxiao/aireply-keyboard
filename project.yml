@@ -1,0 +1,54 @@
+# XcodeGen 工程定义：GitHub Actions 上用它生成 .xcodeproj（Windows 上无需任何 Mac 工具）
+# 文档：https://github.com/yonaskolb/XcodeGen
+
+name: AIReplyShell
+options:
+  bundleIdPrefix: com.aireplyfree
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"   # 仅 iPhone
+
+targets:
+  # ---------------- 宿主壳 App ----------------
+  AIReplyShell:
+    type: application
+    platform: iOS
+    sources:
+      - path: AIReplyShell
+    info:
+      path: AIReplyShell/Info.plist
+      properties:
+        CFBundleDisplayName: AI Reply
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    dependencies:
+      - target: KeyboardExtension
+        embed: true
+        codeSign: false          # 打包时统一 CODE_SIGNING_ALLOWED=NO，交由 Sideloadly 签名
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aireplyfree.shell
+        GENERATE_INFOPLIST_FILE: NO
+
+  # ---------------- 键盘扩展 ----------------
+  KeyboardExtension:
+    type: app-extension          # 键盘扩展 = 自带 NSExtension 配置的 app extension
+    platform: iOS
+    sources:
+      - path: KeyboardExtension
+    info:
+      path: KeyboardExtension/Info.plist
+      properties: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aireplyfree.shell.KeyboardExtension
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
