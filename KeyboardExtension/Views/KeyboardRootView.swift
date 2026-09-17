@@ -234,7 +234,8 @@ private struct BottomKeyRow: View {
                 Text("回车")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.primary)
-                    .frame(width: 56, maxHeight: .infinity)
+                    .frame(width: 56)
+                    .frame(maxHeight: .infinity)
             }
             .background(Color(UIColor.systemGray5))
             .cornerRadius(6)

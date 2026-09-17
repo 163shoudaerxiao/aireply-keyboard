@@ -1,11 +1,11 @@
-# GitHub Actions：macOS 云端构建未签名 IPA（Windows 用户无需 Mac）
-# 触发方式：① push 到 main 自动构建 ② 手动在 Actions 页面点 Run workflow
-# 产物：Artifacts 里的 AIReplyShell-unsigned-ipa.zip（解压得 .ipa）
+# GitHub Actions: build unsigned IPA on macOS cloud runner (no Mac needed)
+# Trigger: push to main (auto) or manual Run workflow button
+# Artifact: AIReplyShell-unsigned-ipa.zip -> unzip to get .ipa
 
 name: Build unsigned IPA
 
 on:
-  workflow_dispatch:        # 手动触发按钮
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -15,12 +15,12 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14       # GitHub 免费提供的 macOS 云机器（公开仓库免费无限时）
+    runs-on: macos-14
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 选择 Xcode 16（匹配 XcodeGen 生成的工程格式）
+      - name: Select Xcode 16 (match XcodeGen project format)
         run: |
           ls /Applications | grep Xcode || true
           for v in Xcode_16.2 Xcode_16.1 Xcode_16 Xcode_15.4; do
@@ -31,13 +31,13 @@ jobs:
           done
           xcodebuild -version
 
-      - name: 安装 XcodeGen（生成 .xcodeproj）
+      - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: 生成 Xcode 工程
+      - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: 归档构建（未签名）
+      - name: Archive build (unsigned)
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -50,10 +50,9 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             | tee build.log | grep -E "(error|warning:|BUILD|ARCHIVE)" || true
-          # 确保失败时任务变红
           test -d build/AIReplyShell.xcarchive
 
-      - name: 打包未签名 IPA
+      - name: Package unsigned IPA
         run: |
           mkdir -p build/Payload
           cp -R "build/AIReplyShell.xcarchive/Products/Applications/AIReplyShell.app" build/Payload/
@@ -61,7 +60,7 @@ jobs:
           zip -qry AIReplyShell-unsigned.ipa Payload
           ls -lh AIReplyShell-unsigned.ipa
 
-      - name: 保存构建日志（失败排查用）
+      - name: Save build log
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -69,7 +68,7 @@ jobs:
           path: build.log
           if-no-files-found: ignore
 
-      - name: 上传 IPA 产物
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: AIReplyShell-unsigned-ipa

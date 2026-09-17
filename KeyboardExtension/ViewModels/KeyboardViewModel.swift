@@ -90,7 +90,7 @@ final class KeyboardViewModel: ObservableObject {
 
     func advanceKeyboard() { onAdvanceToNextKeyboard?() }
     func deleteBackward() { onDeleteBackward?() }
-    func insertSpace()    { onInsertText?(" ") }
+    func insertSpace()    { _ = onInsertText?(" ") }
     func tapReturn()      { onReturnKey?() }   // 回车仅插入换行，不触发 AI 发送
 
     // MARK: - 风格生成（手动发送模式：生成后只插入，不自动发送）

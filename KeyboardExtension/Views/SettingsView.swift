@@ -210,8 +210,8 @@ struct SettingsView: View {
         let newStyle = ReplyStyle(
             id: "custom_\(Int(Date().timeIntervalSince1970))",
             name: name,
-            prompt: "请用「\(name)」的语气回复对方的消息，只输出回复内容本身。",
-            isBuiltin: false
+            isBuiltin: false,
+            prompt: "请用「\(name)」的语气回复对方的消息，只输出回复内容本身。"
         )
         styles.append(newStyle)
         store.saveStyles(styles)

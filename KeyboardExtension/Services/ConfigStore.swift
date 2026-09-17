@@ -54,8 +54,8 @@ enum AIPlatform: String, CaseIterable, Identifiable {
 struct ReplyStyle: Codable, Identifiable, Equatable {
     let id: String
     var name: String
-    var prompt: String
     var isBuiltin: Bool
+    var prompt: String
 }
 
 /// AI 配置快照

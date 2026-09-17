@@ -82,7 +82,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func bindProxyActions() {
         viewModel.onInsertText = { [weak self] text in
-            self?.insertAndVerify(text)
+            self?.insertAndVerify(text) ?? false
         }
         viewModel.onReturnKey = { [weak self] in
             // 仅插入换行；生成结果永远由用户手动点击发送
@@ -115,10 +115,8 @@ final class KeyboardViewController: UIInputViewController {
         let proxy = textDocumentProxy
         proxy.insertText(text)
 
-        // 光标移到末尾（insertText 后光标自然在插入文本之后，再显式兜底）
-        proxy.adjustCursor(forward: true, offset: Int.max)
-
-        // 验证：取插入文本结尾 20 个字符，看光标前上下文是否包含
+        // insertText 后光标自然位于插入文本之后（即文本末尾），
+        // UITextDocumentProxy 无公开的移动光标 API，无需额外处理
         let suffix = String(text.suffix(20))
         if let before = proxy.documentContextBeforeInput, before.contains(suffix) {
             return true
