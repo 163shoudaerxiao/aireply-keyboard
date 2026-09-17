@@ -20,8 +20,16 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 选择 Xcode 15.4（支持 iOS 16+ SDK）
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+      - name: 选择 Xcode 16（匹配 XcodeGen 生成的工程格式）
+        run: |
+          ls /Applications | grep Xcode || true
+          for v in Xcode_16.2 Xcode_16.1 Xcode_16 Xcode_15.4; do
+            if [ -d "/Applications/$v.app" ]; then
+              sudo xcode-select -s "/Applications/$v.app/Contents/Developer"
+              break
+            fi
+          done
+          xcodebuild -version
 
       - name: 安装 XcodeGen（生成 .xcodeproj）
         run: brew install xcodegen
